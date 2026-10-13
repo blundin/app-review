@@ -1,0 +1,94 @@
+{
+  "skill_name": "prd-review",
+  "evals": [
+    {
+      "id": 1,
+      "name": "strong-prd-no-inflation",
+      "prompt": "Review this PRD and tell me if it's ready to build.",
+      "files": [
+        "evals/prd-review/files/strong-prd.md"
+      ],
+      "expected_behavior": [
+        "Scores problem, primary user, core job, requirements, metrics, non-goals, and constraints as Present, each with a cited passage",
+        "Reports ready to build: yes and ready for product-review: yes",
+        "Raises no Blocker findings; any findings are Minor or Nit, or a Major with a specific cited cause (for example, R3's replacement rule lacks a behavior for when no replacement is named)",
+        "Ends by asking whether to grill now or stop, and does not start the grill"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "weak-prd-blockers-in-dependency-order",
+      "prompt": "Can you audit our Community Hub PRD? Be tough.",
+      "files": [
+        "evals/prd-review/files/weak-prd.md"
+      ],
+      "expected_behavior": [
+        "Scores problem, primary user, and core job as Missing or Thin, and raises each as a Blocker",
+        "Flags the five equal user types as Thin primary user, and the adjectives (fast, simple, delightful) as untestable",
+        "Flags the Tech section as solution in place of need (rubric section B, check 4)",
+        "Orders findings problem, then primary user, then core job, then requirements, then metrics, regardless of severity ties",
+        "Reports ready to build: no and ready for product-review: no",
+        "Asks one grill-or-stop question at the end and starts no grill"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "hidden-contradiction",
+      "prompt": "Stress-test the potluck PRD before I start building.",
+      "files": [
+        "evals/prd-review/files/contradiction-prd.md"
+      ],
+      "expected_behavior": [
+        "Finds that R3 (a guest returns days later and edits their claim) contradicts the non-goal of no guest accounts or stored emails, and cites both locations",
+        "Rates that contradiction Major or Blocker and states which decision resolves it (an edit token in the link, accounts, or dropping R3)",
+        "Flags R5 for leaving the summary's contents undefined, as a Minor or Major finding",
+        "Covers missing scenarios such as two guests with the same name and a category cap being lowered after claims",
+        "Asks one grill-or-stop question at the end"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "picks-up-handoff-prd-in-a-fresh-session",
+      "prompt": "Review our PRD.",
+      "files": [
+        "SUPPLY: a scratch GitHub repo with .app-review.json, a PRD, and an open product-review issue labeled handoff:prd with no app-review-pickup comment"
+      ],
+      "expected_behavior": [
+        "Lists open handoff:prd entries not yet picked up, without being told they exist",
+        "Offers them as incoming findings and, on a yes, grills them under Phase 2's rules for passed-in findings",
+        "After writing a decision to the PRD, proposes a pickup comment on the issue naming the decision",
+        "Proposes closing the issue only when the decision needs no change to the app, and otherwise leaves it open for product-review"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "stop-writes-open-questions",
+      "prompt": "Audit this PRD. I don't have time to grill it today.",
+      "files": [
+        "evals/prd-review/files/weak-prd.md"
+      ],
+      "expected_behavior": [
+        "Delivers the audit and, on the stop, offers to write every unsettled finding into the PRD as an open question before the export queue",
+        "Leaves the Blocker findings (problem, primary user, core job) out of the offer and keeps them in the export queue",
+        "Phrases each as a question tagged with the review and date, not a finding ID, and asks once for an owner or decision date covering the batch",
+        "Shows the exact text and says it will create an Open questions section, since the PRD has none",
+        "Writes nothing before the user rules; since the PRD is an attachment, delivers the full revised PRD at the end",
+        "Sends questions the user declines to the export queue, and counts the written ones as written in the run summary"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "partial-grill-appends-open-questions",
+      "prompt": "Review the PRD and grill only the top finding.",
+      "files": [
+        "evals/prd-review/files/strong-prd.md"
+      ],
+      "expected_behavior": [
+        "Grills only the top finding, then offers the remaining unsettled findings as open questions",
+        "Appends them under the existing Open questions section in its existing format, keeping every existing item",
+        "Skips a finding the section already asks about, and says so",
+        "Leaves dropped findings out of the PRD and records them in the run summary"
+      ]
+    }
+  ]
+}

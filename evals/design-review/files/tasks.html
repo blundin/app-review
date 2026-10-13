@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chores</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0 auto; max-width: 640px; padding: 16px; }
+  .btn { background: #2563EB; color: #fff; border: 0; border-radius: 8px; padding: 10px 16px; }
+  .btn-add { background: #1D4ED8; color: #fff; border: 0; border-radius: 4px; padding: 10px 16px; }
+  .meta { color: #b0b0b0; font-size: 12px; }
+  .row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #eee; }
+  .err { display: none; color: #b91c1c; }
+</style>
+</head>
+<body>
+  <h1>Chores</h1>
+  <p class="meta">Household board</p>
+
+  <form id="add">
+    <input id="title" placeholder="Chore name">
+    <input id="who" placeholder="Assignee">
+    <button class="btn-add" type="submit">Submit</button>
+    <p class="err" id="err">Error 422</p>
+  </form>
+
+  <div id="list"></div>
+
+  <script>
+    let chores = [];
+    function render() {
+      document.getElementById('list').innerHTML = chores.map((c, i) =>
+        `<div class="row"><span>${c.title} <span class="meta">${c.who}</span></span>
+         <a href="#" onclick="chores.splice(${i},1);render();return false;">Delete</a></div>`).join('');
+    }
+    document.getElementById('add').onsubmit = async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('title').value;
+      if (!title) { document.getElementById('err').style.display = 'block'; return; }
+      await new Promise(r => setTimeout(r, 2500)); // simulated save
+      chores.push({ title, who: document.getElementById('who').value });
+      document.getElementById('add').reset();
+      render();
+    };
+    render();
+  </script>
+  <p><a class="btn" href="/settings">Settings</a></p>
+</body>
+</html>

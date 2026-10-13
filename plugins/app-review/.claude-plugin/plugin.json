@@ -1,0 +1,10 @@
+{
+  "name": "app-review",
+  "version": "0.1.3",
+  "description": "Review skills that validate an app from product, design, and architecture points of view, plus a PRD audit with an interactive grill and an entry skill that recommends which review to run next. Findings use one severity scale (Blocker, Major, Minor, Nit) and go to the project's tracker (GitHub issues or a markdown file) once the user rules on them.",
+  "author": { "name": "Brian Lundin" },
+  "license": "MIT",
+  "homepage": "https://github.com/blundin/app-review",
+  "repository": "https://github.com/blundin/app-review",
+  "keywords": ["review", "prd", "product", "design", "architecture", "adr"]
+}

@@ -1,0 +1,106 @@
+{
+  "skill_name": "product-review",
+  "evals": [
+    {
+      "id": 1,
+      "name": "real-app-full-review",
+      "prompt": "Run a product review of this app against its PRD.",
+      "files": [
+        "SUPPLY: the app's PRD",
+        "SUPPLY: live URL (Cowork) or screenshots, plus repo access"
+      ],
+      "expected_behavior": [
+        "Declares evidence coverage before reviewing and ties each finding's confidence to its source",
+        "Passes the readiness gate in one line and builds a numbered ledger covering every testable PRD statement",
+        "Assigns every ledger row a status, with evidence for each status other than Delivered",
+        "Runs the reverse trace and names unaccounted features, or says the evidence could not reveal them",
+        "Uses only Blocker, Major, Minor, and Nit, consistent with rubric section B",
+        "Marks every scope finding and every PRD-level fix with PRD change, lists them in the report, and ends by offering to pass them to prd-review's grill, export issues, or stop, doing none of these unasked"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "readiness-gate-stops",
+      "prompt": "Does the app match the spec? Here's the PRD and the repo.",
+      "files": [
+        "evals/product-review/files/weak-prd.md",
+        "SUPPLY: any small repo"
+      ],
+      "expected_behavior": [
+        "Stops at Step 2 without building a ledger or tracing",
+        "Names which of primary user, core job, and testable requirements fail, quoting the PRD where a passage exists",
+        "Recommends running prd-review first"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "no-prd-no-review",
+      "prompt": "Give me a product review of this app.",
+      "files": [
+        "SUPPLY: a repo with no PRD, spec, or README describing intent"
+      ],
+      "expected_behavior": [
+        "Searches the conversation, Project knowledge, and repo locations named in Step 1 for a PRD",
+        "Stops and asks for a PRD when none exists",
+        "Does not reconstruct intent from the code and review against it"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "export-queue-needs-ruling",
+      "prompt": "Run a product review of this app against its PRD.",
+      "files": [
+        "SUPPLY: a repo with a PRD, some gaps, and .app-review.json set to {\"tracker\": \"markdown\"}"
+      ],
+      "expected_behavior": [
+        "Resolves the tracker from .app-review.json without asking",
+        "Ends the report with an export queue listing every finding not written to an artifact, each with a proposed action",
+        "Writes nothing to docs/reviews/findings.md before the user rules on the queue",
+        "After a ruling such as 'export all except P-02; drop P-03, cosmetic', creates entries only for the approved findings, each with an app-review-fp line, and records P-03 as dropped with its reason",
+        "Ends with a run summary that gives every finding a state (written, exported, or dropped) and lists nothing as pending"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "dedup-comments-on-existing-issue",
+      "prompt": "Product review again, please; we fixed a few things since last time.",
+      "files": [
+        "SUPPLY: a scratch GitHub repo with .app-review.json, a PRD, and an open product-review issue whose app-review-fp line matches a gap still present"
+      ],
+      "expected_behavior": [
+        "Lists open product-review issues and matches fingerprints exactly before proposing any create",
+        "Proposes 'comment on #n' for the still-present gap instead of a new issue",
+        "Creates no issue whose fingerprint matches an open one",
+        "Shows a near match (same review, lens, and location, different slug) as 'same as #n?' rather than merging or duplicating it silently"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "reconcile-open-entries",
+      "prompt": "Run the product review again.",
+      "files": [
+        "SUPPLY: a scratch GitHub repo with .app-review.json, a PRD, and three open product-review issues: one for a gap now fixed, one for a gap still present, one at a location this run's evidence cannot reach"
+      ],
+      "expected_behavior": [
+        "Lists open product-review and handoff:product entries before writing findings",
+        "Matches the still-present gap to its open issue and proposes a comment, not a new issue",
+        "Rechecks the fixed gap at its location and proposes 'close #n' with the evidence that shows the fix",
+        "Marks the unreachable entry unverifiable, leaves it open, and names it in the run summary",
+        "Closes nothing until the user rules on the queue"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "prd-change-carries-handoff-label",
+      "prompt": "Product review of this app; I don't want to change the PRD today.",
+      "files": [
+        "SUPPLY: a repo with .app-review.json, a PRD, and a feature the PRD does not mention"
+      ],
+      "expected_behavior": [
+        "Fills PRD change on the scope finding",
+        "When the user declines prd-review's grill, puts the finding in the export queue with a handoff:prd label",
+        "Counts the finding as exported, not written, in the run summary"
+      ]
+    }
+  ]
+}

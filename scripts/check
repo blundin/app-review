@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+"""The repo's single gate.
+
+1. Every copy of a shared file matches its canonical version in shared/.
+2. Every skill has valid frontmatter (name and description within limits),
+   and every references/ file a skill names exists.
+3. Versions in plugin.json and marketplace.json agree.
+4. No em or en dash appears in skill text.
+5. Every finding template offers the same handoffs, minus the skill's own lens.
+6. The GitHub adapter creates every label the skills use.
+7. Every eval file parses and names files that exist (SUPPLY slots excepted).
+"""
+
+import json
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+PLUGIN = ROOT / "plugins" / "app-review"
+SKILLS = PLUGIN / "skills"
+SHARED = ROOT / "shared"
+
+# Skills that resolve and write to the project's tracker.
+TRACKED = ["prd-review", "product-review", "design-review", "architecture-review", "app-review"]
+
+# Skills that write findings, each under its own review label.
+REVIEWS = [s for s in TRACKED if s != "app-review"]
+
+# Which skills carry which shared files.
+SHARED_COPIES = {
+    "grill-protocol.md": ["prd-review", "design-review", "architecture-review"],
+    "tracker.md": TRACKED,
+    "tracker-github.md": TRACKED,
+    "tracker-markdown.md": TRACKED,
+}
+
+# Every finding template offers the same handoffs, minus the skill's own lens.
+HANDOFFS = ["code", "product", "design", "architecture", "accessibility"]
+HANDOFF_OWNER = {
+    "product-review": "product",
+    "design-review": "design",
+    "architecture-review": "architecture",
+}
+
+errors: list[str] = []
+
+
+def check_shared() -> None:
+    for name, skills in SHARED_COPIES.items():
+        if not (SHARED / name).exists():
+            errors.append(f"shared/{name}: missing canonical file")
+            continue
+        canonical = (SHARED / name).read_text()
+        for skill in skills:
+            copy = SKILLS / skill / "references" / name
+            if not copy.exists():
+                errors.append(f"{copy.relative_to(ROOT)}: missing copy of shared/{name}")
+            elif copy.read_text() != canonical:
+                errors.append(f"{copy.relative_to(ROOT)}: drifted from shared/{name}")
+        for extra in SKILLS.glob(f"*/references/{name}"):
+            if extra.parent.parent.name not in skills:
+                errors.append(f"{extra.relative_to(ROOT)}: not listed in SHARED_COPIES")
+
+
+def check_frontmatter() -> None:
+    for skill_md in sorted(SKILLS.glob("*/SKILL.md")):
+        text = skill_md.read_text()
+        match = re.match(r"^---\n(.*?)\n---\n", text, re.S)
+        if not match:
+            errors.append(f"{skill_md.relative_to(ROOT)}: no frontmatter")
+            continue
+        fields = dict(
+            line.split(":", 1) for line in match.group(1).splitlines() if ":" in line
+        )
+        name = fields.get("name", "").strip()
+        desc = fields.get("description", "").strip()
+        if name != skill_md.parent.name:
+            errors.append(f"{skill_md.relative_to(ROOT)}: name '{name}' must match its folder")
+        if not re.fullmatch(r"[a-z0-9-]{1,64}", name):
+            errors.append(f"{skill_md.relative_to(ROOT)}: invalid name '{name}'")
+        if not desc or len(desc) > 1024:
+            errors.append(f"{skill_md.relative_to(ROOT)}: description is {len(desc)} chars (1 to 1024)")
+        if "<" in desc or ">" in desc:
+            errors.append(f"{skill_md.relative_to(ROOT)}: description contains angle brackets")
+
+
+def check_references() -> None:
+    for md in sorted(SKILLS.rglob("*.md")):
+        skill = md.relative_to(SKILLS).parts[0]
+        for name in sorted(set(re.findall(r"references/([\w-]+\.md)", md.read_text()))):
+            if not (SKILLS / skill / "references" / name).exists():
+                errors.append(f"{md.relative_to(ROOT)}: names missing references/{name}")
+
+
+def check_handoffs() -> None:
+    for skill_md in sorted(SKILLS.glob("*/SKILL.md")):
+        own = HANDOFF_OWNER.get(skill_md.parent.name)
+        match = re.search(r"^\*\*Handoff:\*\* (.+?)\.?$", skill_md.read_text(), re.M)
+        if match is None:
+            continue
+        expected = [h for h in HANDOFFS if h != own] + ["none"]
+        found = re.split(r",\s*(?:or\s+)?", match.group(1))
+        if found != expected:
+            errors.append(
+                f"{skill_md.relative_to(ROOT)}: Handoff lists {found}, expected {expected}"
+            )
+
+
+def check_labels() -> None:
+    match = re.search(r"^for l in (.+)$", (SHARED / "tracker-github.md").read_text(), re.M)
+    created = set(match.group(1).split()) if match else set()
+    severities = [f"severity:{s}" for s in ("blocker", "major", "minor", "nit")]
+    handoffs = [f"handoff:{h}" for h in HANDOFFS + ["prd"]]
+    for label in REVIEWS + severities + handoffs:
+        if label not in created:
+            errors.append(f"shared/tracker-github.md: label loop does not create {label}")
+
+
+def check_versions() -> None:
+    plugin = json.loads((PLUGIN / ".claude-plugin" / "plugin.json").read_text())
+    market = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text())
+    entry = next((p for p in market["plugins"] if p["name"] == plugin["name"]), None)
+    if entry is None:
+        errors.append("marketplace.json: no entry for the plugin")
+    elif entry.get("version") != plugin.get("version"):
+        errors.append(
+            f"version mismatch: plugin.json {plugin.get('version')}, marketplace.json {entry.get('version')}"
+        )
+
+
+def check_dashes() -> None:
+    for path in sorted(list(SKILLS.rglob("*.md")) + list(SHARED.glob("*.md"))):
+        for number, line in enumerate(path.read_text().splitlines(), 1):
+            if "\u2014" in line or "\u2013" in line:
+                errors.append(f"{path.relative_to(ROOT)}:{number}: em or en dash")
+
+
+def check_evals() -> None:
+    for evals in sorted((ROOT / "evals").glob("*/evals.json")):
+        try:
+            data = json.loads(evals.read_text())
+        except ValueError as exc:
+            errors.append(f"{evals.relative_to(ROOT)}: invalid JSON ({exc})")
+            continue
+        if data.get("skill_name") != evals.parent.name:
+            errors.append(f"{evals.relative_to(ROOT)}: skill_name must match its folder")
+        if len(data.get("evals", [])) < 3:
+            errors.append(f"{evals.relative_to(ROOT)}: fewer than three evals")
+        for case in data.get("evals", []):
+            for f in case.get("files", []):
+                if not f.startswith("SUPPLY") and not (ROOT / f).exists():
+                    errors.append(f"{evals.relative_to(ROOT)}: eval {case.get('id')} names missing file {f}")
+
+
+def main() -> int:
+    check_shared()
+    check_frontmatter()
+    check_references()
+    check_handoffs()
+    check_labels()
+    check_versions()
+    check_dashes()
+    check_evals()
+    if errors:
+        print("\n".join(errors), file=sys.stderr)
+        print(f"\n{len(errors)} problem(s).", file=sys.stderr)
+        return 1
+    print("All checks pass.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

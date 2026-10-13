@@ -1,0 +1,68 @@
+{
+  "skill_name": "design-review",
+  "evals": [
+    {
+      "id": 1,
+      "name": "web-planted-issues",
+      "prompt": "Do a design review of this chores page. The core job is adding a chore and assigning it to someone in the household.",
+      "files": [
+        "evals/design-review/files/tasks.html"
+      ],
+      "expected_behavior": [
+        "Declares that evidence is code only and lowers confidence accordingly",
+        "Infers a baseline that notes two primary button colors (#2563EB and #1D4ED8) and two corner radii (8px and 4px), and raises a consistency finding with Decision needed",
+        "Flags the blank list with no empty state on a core screen as Major",
+        "Flags the 2.5-second save with no progress feedback and no double-submit guard as Major",
+        "Flags 'Submit' and 'Error 422' as copy findings, and the placeholder-only labels as a web forms convention finding",
+        "Flags Delete with no confirmation or undo, and the link used as an action button",
+        "Does not raise the low-contrast gray (#b0b0b0) as its own finding; at most tags it as an accessibility handoff",
+        "Uses only Blocker, Major, Minor, and Nit, and ends by offering to grill decisions, export issues, or stop"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "ios-planted-issues",
+      "prompt": "Review the design of this SwiftUI settings screen for my iOS app.",
+      "files": [
+        "evals/design-review/files/SettingsView.swift"
+      ],
+      "expected_behavior": [
+        "Reads the iOS reference and asks for or notes the absence of screenshots in light and dark appearance",
+        "Flags 'Delete household' as a destructive action with no destructive role, no confirmation, and no undo, rated Blocker",
+        "Flags the hidden system back button with a custom '< Back' label, which breaks the expected back affordance and likely the edge swipe",
+        "Flags interactiveDismissDisabled on a sheet that has no Cancel action, which traps the user",
+        "Flags hard-coded RGB colors with no dark variant",
+        "Flags the empty-name row rendering a blank space, the TextField with no label or prompt, and the 'OK' button label",
+        "Leaves Dynamic Type and VoiceOver concerns to an accessibility handoff"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "real-app-full-review",
+      "prompt": "Run a design review of this app.",
+      "files": [
+        "SUPPLY: the app's PRD",
+        "SUPPLY: live URL (Cowork) or screenshots, plus repo access"
+      ],
+      "expected_behavior": [
+        "Assembles a baseline table with stated and inferred sources, extracted from the repo's styles and components",
+        "Builds a screen inventory marking core and first-run screens, and a state matrix for each",
+        "Every finding cites a screen, an element, and an evidence source",
+        "Lists decisions needed separately and offers Phase 2 without starting it"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "picks-up-handoff-design",
+      "prompt": "Design review of the app.",
+      "files": [
+        "SUPPLY: a scratch GitHub repo with .app-review.json, the app or screenshots, and an open product-review issue labeled handoff:design"
+      ],
+      "expected_behavior": [
+        "Lists open handoff:design entries not yet picked up and checks each one's design cause",
+        "Writes its own D finding for a confirmed cause, with its own fingerprint",
+        "Proposes a pickup comment on the product-review issue that links the new finding, and does not propose closing that issue"
+      ]
+    }
+  ]
+}

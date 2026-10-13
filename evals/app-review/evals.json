@@ -1,0 +1,63 @@
+{
+  "skill_name": "app-review",
+  "evals": [
+    {
+      "id": 1,
+      "name": "prd-only-routes-to-prd-review",
+      "prompt": "Can you review my app idea? Here's what I've written so far.",
+      "files": [
+        "evals/prd-review/files/weak-prd.md"
+      ],
+      "expected_behavior": [
+        "Notices that a PRD exists and no app is built, and asks about the app only if the files leave it unclear",
+        "Recommends prd-review first and says the other reviews need something built",
+        "Asks before starting, and on a yes runs prd-review from its first step",
+        "Judges nothing itself and writes no findings"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "built-app-recommends-order",
+      "prompt": "Review this app for me.",
+      "files": [
+        "evals/architecture-review/files/sample-app/README.md",
+        "evals/architecture-review/files/sample-app/Gemfile",
+        "evals/architecture-review/files/sample-app/deploy.sh",
+        "evals/architecture-review/files/sample-app/docker-compose.yml",
+        "evals/architecture-review/files/sample-app/docs/adr/0001-use-sqlite.md"
+      ],
+      "expected_behavior": [
+        "Looks for a PRD in the files before asking, and asks only about what it could not find",
+        "Recommends an order as a numbered list with one line of reason each, following Step 2's rules",
+        "Notes that product-review needs a PRD and does not recommend it while none exists",
+        "Starts at most one review, and only after the user agrees"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "named-lens-is-not-routed",
+      "prompt": "Do an architecture review of this repo.",
+      "files": [
+        "evals/architecture-review/files/sample-app/README.md",
+        "evals/architecture-review/files/sample-app/deploy.sh"
+      ],
+      "expected_behavior": [
+        "architecture-review triggers instead of app-review",
+        "No routing questions or recommended order appear before the architecture review starts"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "reports-lens-status",
+      "prompt": "Where are we with reviews on this project?",
+      "files": [
+        "SUPPLY: a scratch GitHub repo with .app-review.json and open issues across product-review, design-review, and handoff:architecture labels"
+      ],
+      "expected_behavior": [
+        "Resolves the tracker and lists open entries without exporting, commenting, or closing anything",
+        "Reports, per lens, open Blocker and Major counts and handoffs waiting for pickup, and whether the lens is done",
+        "Recommends first the lens with handoffs waiting, following Step 2's rules"
+      ]
+    }
+  ]
+}

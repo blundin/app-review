@@ -1,0 +1,20 @@
+services:
+  web:
+    build: .
+    ports:
+      - "80:3000"
+    environment:
+      DATABASE_URL: postgres://app:hunter2@db:5432/app
+      SMTP_PASSWORD: example-smtp-password
+      RAILS_ENV: production
+    depends_on: [db]
+  db:
+    image: postgres:12
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: hunter2
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:

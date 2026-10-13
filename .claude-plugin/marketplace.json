@@ -1,0 +1,17 @@
+{
+  "name": "blundin",
+  "owner": {
+    "name": "Brian Lundin"
+  },
+  "metadata": {
+    "description": "Brian Lundin's plugins for reviewing and validating apps."
+  },
+  "plugins": [
+    {
+      "name": "app-review",
+      "source": "./plugins/app-review",
+      "description": "Product, design, architecture, and PRD review skills, plus an entry skill that picks the next review, with a shared severity scale and findings tracked in GitHub issues or a markdown file.",
+      "version": "0.1.3"
+    }
+  ]
+}

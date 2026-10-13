@@ -1,0 +1,69 @@
+{
+  "skill_name": "architecture-review",
+  "evals": [
+    {
+      "id": 1,
+      "name": "planted-risks-forces-calibrated",
+      "prompt": "Can you do an architecture review of this repo? It's our family's app.",
+      "files": [
+        "evals/architecture-review/files/sample-app/"
+      ],
+      "expected_behavior": [
+        "Fills the forces checklist from the README (one household, one part-time developer, a $12 droplet) and marks each item stated or assumed",
+        "Flags secrets committed in docker-compose.yml (database and SMTP passwords) as a Blocker",
+        "Flags Postgres published on port 5432 to the internet with a weak password as a Blocker or Major",
+        "Flags Ruby 2.7 and Rails 6.0 as end-of-life runtime and framework, and Postgres 12 as end of life, at Major",
+        "Flags that the code uses Postgres while the accepted ADR-0001 says SQLite, as a decisions finding with Decision needed",
+        "Flags no backup or restore evidence as Unverified, and asks the user to run the matching ops-evidence commands rather than assuming",
+        "Notes deploy.sh has no rollback, judged against the forces at Minor, and does not recommend a staging environment or a service split",
+        "Ends by offering to grill decisions, export issues, or stop"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "respects-007-adr-ownership",
+      "prompt": "Review this app's architecture and then grill me through any decisions so we can record ADRs.",
+      "files": [
+        "evals/architecture-review/files/sample-007-app/"
+      ],
+      "expected_behavior": [
+        "Notices .007-version and states that the architect agent owns ADRs in this repo",
+        "Delivers the full audit report first, then treats the prompt's request as the explicit yes and begins the grill without asking again",
+        "During the grill, asks one decision at a time with a recommended answer",
+        "Delivers each settled ADR as text in the section D format and writes nothing to docs/adr/",
+        "Tells the user to have the architect agent record each ADR in record mode"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "real-app-full-review",
+      "prompt": "Run an architecture review of this app.",
+      "files": [
+        "SUPPLY: a real single-server app repo",
+        "SUPPLY: output of the single-server and email sections of ops-evidence.md for its production server"
+      ],
+      "expected_behavior": [
+        "Builds a system map with the server, the database, the email provider, and any scheduled jobs, with a quantum count",
+        "Checks SPF, DKIM, and DMARC for the sending domain and bounce handling for the email provider",
+        "Reports every unrun ops check as Unverified with Low confidence",
+        "Every finding names a force and an evidence source"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "no-config-asks-once",
+      "prompt": "Architecture review of this repo.",
+      "files": [
+        "evals/architecture-review/files/sample-app/README.md",
+        "evals/architecture-review/files/sample-app/deploy.sh",
+        "evals/architecture-review/files/sample-app/docker-compose.yml"
+      ],
+      "expected_behavior": [
+        "Finds no .app-review.json and no tracker in Project knowledge, then asks once which tracker and target to use",
+        "Offers to save the answer as .app-review.json and writes it only on the user's OK",
+        "Puts handoff: code findings in the export queue with a handoff:code label, like any other finding",
+        "Does not ask about the tracker again later in the run"
+      ]
+    }
+  ]
+}
